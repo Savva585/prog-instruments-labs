@@ -1,5 +1,4 @@
 import argparse
-import re
 
 
 def intput_file(filename: str) -> str:
@@ -25,16 +24,27 @@ def output_file(filename: str, text: str) -> None:
         file.write("\n")
 
 
-def parse_alfa(text: str):
+def parse_alfa(text: str) -> dict[str, float]:
     """Функция для парсинга стандартного алфавита
-    с коэффициентами встречаемости
+    с коэффициентами встречаемости.
     """
-    pattern = r"([А-ЯЁ=])\s*=\s*([\d.]+)"
-    matches = re.findall(pattern, text)
-    return {(" " if letter == "=" else letter): float(value) for letter, value in matches}
+    result: dict[str, float] = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or "=" not in line:
+            continue
+        left, _, right = line.partition("=")
+        left = left.strip()
+        try:
+            value = float(right.strip())
+        except ValueError:
+            continue
+        key = " " if left == "" else left
+        result[key] = value
+    return result
 
 
-def freq_liter(start_string: str, total: int) -> dict:
+def freq_liter(start_string: str, total: int) -> dict[str, float]:
     """Функция для подсчета доли встречаемости букв
     в исходном тексте
     """
@@ -45,18 +55,14 @@ def freq_liter(start_string: str, total: int) -> dict:
     return freq_percent
 
 
-def normalize_list(alfa_text: str) -> dict:
-    """Функция для нормализации словаря с добавлением ПРОБЕЛА
-    как символа
-    """
-    ref_freq = parse_alfa(alfa_text)
-    ref_freq[" "] = 0.128675
-    if "\n" in ref_freq:
-        del ref_freq["\n"]
-    return ref_freq
+def normalize_list(alfa_text: str) -> dict[str, float]:
+    """Функция для нормализации словаря с пробелом как символом."""
+    return parse_alfa(alfa_text)
 
 
-def frequency_analysis_dict(sorted_text: list, sorted_ref: list) -> None:
+def frequency_analysis_dict(
+    sorted_text: list[tuple[str, float]], sorted_ref: list[tuple[str, float]]
+) -> None:
     """Функция для создания и вывода результатов сравнения
     частотного анализа
     """
@@ -69,7 +75,7 @@ def frequency_analysis_dict(sorted_text: list, sorted_ref: list) -> None:
     print(dictionary, "\n")
 
 
-def decrypt_with_key(key_content: list, start_string: str) -> str:
+def decrypt_with_key(key_content: list[str], start_string: str) -> str:
     """Функция для расшифровки текста при помощи ключа"""
     replace_dict = {}
     for line in key_content:
